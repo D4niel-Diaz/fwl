@@ -10,7 +10,7 @@ function toAuthUser(user: { id: number; name: string; email: string; role: strin
 }
 
 authRouter.post("/register", async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password, role, adminCode } = req.body;
   if (!name || !email || !password) {
     return res.status(400).json({ error: "name, email, and password are required" });
   }
@@ -18,6 +18,15 @@ authRouter.post("/register", async (req, res) => {
     return res.status(400).json({ error: "Password must be at least 8 characters" });
   }
   const normalizedRole = role === "admin" ? "admin" : "user";
+
+  // Admin sign-up requires the ADMIN_INVITE_CODE from the server's .env.
+  // If ADMIN_INVITE_CODE is not set, admin sign-up is disabled entirely.
+  if (normalizedRole === "admin") {
+    const inviteCode = process.env.ADMIN_INVITE_CODE;
+    if (!inviteCode || adminCode !== inviteCode) {
+      return res.status(403).json({ error: "A valid admin invite code is required to register as admin" });
+    }
+  }
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) return res.status(409).json({ error: "An account with that email already exists" });

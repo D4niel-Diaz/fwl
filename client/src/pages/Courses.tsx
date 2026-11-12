@@ -3,13 +3,40 @@ import { api } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import type { Course } from "../types";
 
+const EMPTY_FORM = { code: "", title: "", creditHours: "3", department: "" };
+
 export function CoursesPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
   const [courses, setCourses] = useState<Course[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [form, setForm] = useState({ code: "", title: "", creditHours: "3", department: "" });
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [form, setForm] = useState(EMPTY_FORM);
+
+  function startAdd() {
+    if (showForm) {
+      closeForm();
+    } else {
+      setEditingId(null);
+      setForm(EMPTY_FORM);
+      setShowForm(true);
+    }
+  }
+
+  function startEdit(c: Course) {
+    setEditingId(c.id);
+    setForm({ code: c.code, title: c.title, creditHours: String(c.creditHours), department: c.department });
+    setShowForm(true);
+    setError(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function closeForm() {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+  }
 
   async function load() {
     setCourses(await api.get<Course[]>("/courses"));
@@ -23,9 +50,12 @@ export function CoursesPage() {
     e.preventDefault();
     setError(null);
     try {
-      await api.post("/courses", form);
-      setForm({ code: "", title: "", creditHours: "3", department: "" });
-      setShowForm(false);
+      if (editingId !== null) {
+        await api.put(`/courses/${editingId}`, form);
+      } else {
+        await api.post("/courses", form);
+      }
+      closeForm();
       await load();
     } catch (err: any) {
       setError(err.message);
@@ -47,7 +77,7 @@ export function CoursesPage() {
       <div className="page-header">
         <h2>Courses</h2>
         {isAdmin && (
-          <button className="primary" onClick={() => setShowForm((s) => !s)}>
+          <button className="primary" onClick={startAdd}>
             {showForm ? "Cancel" : "+ Add Course"}
           </button>
         )}
@@ -75,7 +105,7 @@ export function CoursesPage() {
               <input required value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} />
             </label>
           </div>
-          <button className="primary" type="submit">Save Course</button>
+          <button className="primary" type="submit">{editingId !== null ? "Update Course" : "Save Course"}</button>
         </form>
       )}
 
@@ -100,7 +130,8 @@ export function CoursesPage() {
                 <td>{c.creditHours}</td>
                 <td>{c.department}</td>
                 {isAdmin && (
-                  <td>
+                  <td style={{ whiteSpace: "nowrap" }}>
+                    <button onClick={() => startEdit(c)} style={{ marginRight: 6 }}>Edit</button>
                     <button className="danger" onClick={() => handleDelete(c.id)}>Delete</button>
                   </td>
                 )}

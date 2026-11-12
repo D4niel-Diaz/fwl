@@ -9,6 +9,7 @@ export function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("user");
+  const [adminCode, setAdminCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -17,7 +18,7 @@ export function RegisterPage() {
     setError(null);
     setSubmitting(true);
     try {
-      await register(name, email, password, role);
+      await register(name, email, password, role, role === "admin" ? adminCode : undefined);
       navigate("/", { replace: true });
     } catch (err: any) {
       setError(err.message);
@@ -60,6 +61,17 @@ export function RegisterPage() {
               <option value="admin">Admin (full access)</option>
             </select>
           </label>
+          {role === "admin" && (
+            <label>
+              Admin invite code
+              <input
+                required
+                type="password"
+                value={adminCode}
+                onChange={(e) => setAdminCode(e.target.value)}
+              />
+            </label>
+          )}
           <button className="primary" type="submit" disabled={submitting}>
             {submitting ? "Creating account…" : "Create account"}
           </button>

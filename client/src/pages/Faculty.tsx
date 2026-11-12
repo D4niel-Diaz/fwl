@@ -4,6 +4,7 @@ import { useAuth } from "../auth/AuthContext";
 import type { Faculty } from "../types";
 
 const EMPLOYMENT_TYPES = ["full-time", "part-time", "adjunct"];
+const EMPTY_FORM = { name: "", email: "", department: "", employmentType: "full-time", maxLoad: "12" };
 
 export function FacultyPage() {
   const { user } = useAuth();
@@ -11,7 +12,38 @@ export function FacultyPage() {
   const [faculty, setFaculty] = useState<Faculty[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", email: "", department: "", employmentType: "full-time", maxLoad: "12" });
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [form, setForm] = useState(EMPTY_FORM);
+
+  function startAdd() {
+    if (showForm) {
+      closeForm();
+    } else {
+      setEditingId(null);
+      setForm(EMPTY_FORM);
+      setShowForm(true);
+    }
+  }
+
+  function startEdit(f: Faculty) {
+    setEditingId(f.id);
+    setForm({
+      name: f.name,
+      email: f.email,
+      department: f.department,
+      employmentType: f.employmentType,
+      maxLoad: String(f.maxLoad),
+    });
+    setShowForm(true);
+    setError(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function closeForm() {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+  }
 
   async function load() {
     setFaculty(await api.get<Faculty[]>("/faculty"));
@@ -25,9 +57,12 @@ export function FacultyPage() {
     e.preventDefault();
     setError(null);
     try {
-      await api.post("/faculty", form);
-      setForm({ name: "", email: "", department: "", employmentType: "full-time", maxLoad: "12" });
-      setShowForm(false);
+      if (editingId !== null) {
+        await api.put(`/faculty/${editingId}`, form);
+      } else {
+        await api.post("/faculty", form);
+      }
+      closeForm();
       await load();
     } catch (err: any) {
       setError(err.message);
@@ -49,7 +84,7 @@ export function FacultyPage() {
       <div className="page-header">
         <h2>Faculty</h2>
         {isAdmin && (
-          <button className="primary" onClick={() => setShowForm((s) => !s)}>
+          <button className="primary" onClick={startAdd}>
             {showForm ? "Cancel" : "+ Add Faculty"}
           </button>
         )}
@@ -85,7 +120,7 @@ export function FacultyPage() {
               <input required type="number" step="0.5" min="0" value={form.maxLoad} onChange={(e) => setForm({ ...form, maxLoad: e.target.value })} />
             </label>
           </div>
-          <button className="primary" type="submit">Save Faculty</button>
+          <button className="primary" type="submit">{editingId !== null ? "Update Faculty" : "Save Faculty"}</button>
         </form>
       )}
 
@@ -112,7 +147,8 @@ export function FacultyPage() {
                 <td>{f.employmentType}</td>
                 <td>{f.maxLoad}</td>
                 {isAdmin && (
-                  <td>
+                  <td style={{ whiteSpace: "nowrap" }}>
+                    <button onClick={() => startEdit(f)} style={{ marginRight: 6 }}>Edit</button>
                     <button className="danger" onClick={() => handleDelete(f.id)}>Delete</button>
                   </td>
                 )}

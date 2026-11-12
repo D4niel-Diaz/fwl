@@ -27,7 +27,9 @@ Dashboard".
 
 ## Authentication & roles
 
-The app requires sign-in. Anyone can register at `/register`, choosing a role:
+The app requires sign-in. Anyone can register at `/register` as a **user**;
+registering as **admin** requires the `ADMIN_INVITE_CODE` from `server/.env`
+(admin sign-up is disabled when it's empty):
 
 - **admin** — full CRUD on faculty, courses, terms, sections, and assignments
 - **user** — view-only: can see the dashboard and all entity lists, but add/edit/delete controls are hidden and the API rejects write requests with 403
@@ -114,7 +116,6 @@ deploy/nginx.conf            Nginx site config: serves client/dist, proxies /api
 
 - Approval workflow (draft → submitted → approved) for proposed loads
 - Overload-pay calculation and export/reporting per department
-- Restrict who can register as admin (currently self-service via a role dropdown)
 - TLS termination (Certbot or an ALB) in front of the EC2 instance
 - Restrict server-side CORS to the deployed domain (low risk today since the API only listens on `127.0.0.1` and Nginx proxies same-origin)
 - Automate steps 2–3 and 7 with a provisioning script or config management tool, since the GitHub Actions workflow only handles the repeatable parts (pull, build, migrate, reload)

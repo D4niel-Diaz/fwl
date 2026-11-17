@@ -1,5 +1,8 @@
 # Faculty Workload (FWL)
 
+**Live demo:** http://100.58.135.65 (AWS EC2, Ubuntu 24.04 — Nginx + PM2 + PostgreSQL, no Docker;
+auto-deployed by GitHub Actions on every push to `main`)
+
 A faculty teaching-load management app: track faculty, courses, course
 sections per term, and which faculty are assigned to which sections, with a
 dashboard showing each person's total load against their contracted max.

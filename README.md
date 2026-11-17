@@ -109,6 +109,7 @@ client/
   src/types.ts              shared TS types matching the API shapes
   .env.production           VITE_API_BASE_URL=/api, picked up by `npm run build`
 deploy/nginx.conf            Nginx site config: serves client/dist, proxies /api/* to 127.0.0.1:4000
+deploy/setup-server.sh       one-command first-time setup of a fresh Ubuntu server (swap, Node, PostgreSQL, Nginx, PM2, .env, builds)
 .github/workflows/deploy.yml build check (all branches) + SSH deploy to EC2 (main only)
 ```
 
